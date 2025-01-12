@@ -1,0 +1,20 @@
+{
+  "name": "nouns-generator",
+  "version": "1.0.0",
+  "description": "A minimal Node.js + TypeScript project for generating random Nouns",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@nouns/assets": "^0.9.0",
+    "@nouns/sdk": "^0.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5",
+    "ts-node": "^10.9.1"
+  }
+}
