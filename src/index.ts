@@ -1,17 +1,18 @@
 import { ImageData, getNounSeedFromBlockHash, getNounData } from '@nouns/assets';
-import { buildSVG } from '@nouns/sdk';
+import { buildSVG, PNGCollectionEncoder } from '@nouns/sdk';
 import * as fs from 'fs';
 import * as path from 'path';
 import crypto from 'crypto';
+import { readPngFile } from 'node-libpng';
 
 // In some versions, the palette is nested under ImageData:
 const { palette } = ImageData;
-
+const suitcasePngPath = 'custom-assets/suitcase/suitcase.png';
 // // Mock values for demo (replace these with real data from ethers/Web3)
 // const nextNounId = 999; // E.g. currentAuctionedNounId + 1
 // const latestBlockHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
 
-function main() {
+async function main() {
 
   // Generate pseudo-random data for nextNounId and blockHash
   const nextNounId = Math.floor(Math.random() * 10000);
@@ -50,11 +51,44 @@ function main() {
    *    background: 'e1d7d5'
    *  }
    */
+  // 3) read your custom suitcase.svg from disk
+  const suitcasePath = path.join(__dirname, '..', 'custom-assets','suitcase', 'suitcase.png');
+  console.log('Attempting to read from path:', suitcasePath);
+  
+  // 3.1) Read the PNG file into memory
+  const pngData = await readPngFile(suitcasePngPath);
 
-  // 3) Build the SVG as a string
+  // 3.2) Create a PNGCollectionEncoder and encode the image
+  // This appends the RLE data into encoder.data under the folder/name keys
+  const encoder = new PNGCollectionEncoder();
+  encoder.encodeImage('my-suitecase', pngData, 'custom'); 
+    // 'my-suitecase' is the trait name
+    // 'custom' is a folder/category name (arbitrary)
+
+  // 3.3) Retrieve the encoded RLE from encoder.data
+  //  The structure is: encoder.data[folderKey][traitName]
+  const encodedSuitcaseRLE = encoder.data['custom']['my-suitecase'];
+  console.log('Encoded suitcase RLE (first 50 chars):', encodedSuitcaseRLE.slice(0, 50), '...');
+  
+  
+
+  // 4) Push the custom suitecase onto the parts
+  //    array so it appears on top of the other
+  //    layers.
+
+  console.log('parts length BEFORE push:', parts.length);
+  parts.push({
+    filename: 'my-suitecase',
+    data: encodedSuitcaseRLE,
+  });
+  console.log('parts length AFTER push:', parts.length);
+  console.log('Official parts AFTER adding suitcase:', JSON.stringify(parts, null, 2));
+
+  // 5) Build the SVG as a string
+  console.log('Calling buildSVG now...');
   const svgBinary = buildSVG(parts, palette, background);
 
-  // 4) Convert that SVG string to base64
+  // 6) Convert that SVG string to base64
   // In Node.js, you can do:
   const svgBase64 = Buffer.from(svgBinary, 'utf8').toString('base64');
 
@@ -66,7 +100,7 @@ function main() {
   
  const svgString = svgBinary;
 
-  // 2. Create or confirm the output folder
+  //    Create or confirm the output folder
   //    In this example, we create a folder named "images" at the root.
   //    __dirname = the folder of *this* file (i.e. src).
   //    We step one level up and then into "images".
@@ -77,11 +111,11 @@ function main() {
     fs.mkdirSync(imagesDir);
   }
 
-  // 3. Write the SVG file to the images folder
+  // Write the SVG file to the images folder
   const outFile = path.join(imagesDir, 'noun.svg');
   fs.writeFileSync(outFile, svgString, 'utf8');
   
-  // 4. Log a success message
+  // Log a success message
   console.log(`Wrote noun.svg to disk at: ${outFile}`);
 
 }

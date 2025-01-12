@@ -11,7 +11,8 @@
   "license": "MIT",
   "dependencies": {
     "@nouns/assets": "^0.9.0",
-    "@nouns/sdk": "^0.4.0"
+    "@nouns/sdk": "^0.4.0",
+    "node-libpng": "^0.2.20" 
   },
   "devDependencies": {
     "typescript": "^4.9.5",
